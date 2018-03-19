@@ -40,5 +40,14 @@ class QboApi
     def minor_version=(value)
       @minor_version = value
     end
+   
+    def max_tries
+      @max_tries ||= false
+    end
+
+    def max_tries=(value)
+      @max_tries = value
+    end
+
   end
 end

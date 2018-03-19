@@ -98,14 +98,24 @@ class QboApi
   end
 
   def request(method, path:, entity: nil, payload: nil, params: nil)
-    raw_response = connection.send(method) do |req|
-      path = finalize_path(path, method: method, params: params)
-      case method
-      when :get, :delete
-        req.url path
-      when :post, :put
-        req.url path
-        req.body = payload.to_json
+    path = finalize_path(path, method: method, params: params)
+    tries = QboApi.max_tries || 0
+    begin
+      raw_response = connection.send(method) do |req|
+        case method
+        when :get, :delete
+          req.url path
+        when :post, :put
+          req.url path
+          req.body = payload.to_json
+        end
+      end
+    rescue Faraday::TimeoutError
+      if tries > 0
+        tries -= 1
+        retry
+      else
+        raise
       end
     end
     response(raw_response, entity: entity)
